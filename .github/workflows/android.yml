@@ -29,6 +29,24 @@ jobs:
       - name: Install Android SDK packages
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
 
+      - name: Restore persistent debug signing key
+        uses: actions/cache@v4
+        with:
+          path: app/codestudio-debug.keystore
+          key: codestudio-android-debug-signing-v1
+
+      - name: Create debug signing key if needed
+        run: |
+          if [ ! -f app/codestudio-debug.keystore ]; then
+            keytool -genkeypair -v \
+              -keystore app/codestudio-debug.keystore \
+              -storepass CodeStudioDebug2026 \
+              -alias codestudio \
+              -keypass CodeStudioDebug2026 \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=CodeStudio Android, OU=Development, O=CodeStudio, C=BR"
+          fi
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
@@ -37,10 +55,13 @@ jobs:
       - name: Build debug APK
         run: gradle --no-daemon assembleDebug
 
+      - name: Rename APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/CodeStudio-Editor-de-Codigo.apk
+
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: CodeStudio-Android-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: CodeStudio-Editor-de-Codigo
+          path: app/build/outputs/apk/debug/CodeStudio-Editor-de-Codigo.apk
           if-no-files-found: error
           retention-days: 14
