@@ -1,6 +1,9 @@
 package com.codestudio.android
 
 import android.os.Bundle
+import android.net.Uri
+import android.widget.Toast
+import java.io.File
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -19,7 +22,8 @@ private enum class WorkspaceTab(val label: String, val icon: ImageVector) {
     SEARCH("Buscar", Icons.Default.Search),
     SOURCE("Git", Icons.Default.AccountTree),
     GITHUB("GitHub", Icons.Default.Cloud),
-    TERMINAL("Terminal", Icons.Default.Terminal)
+    TERMINAL("Terminal", Icons.Default.Terminal),
+    EDITOR("Editor", Icons.Default.Code)
 }
 
 class MainActivity : ComponentActivity() {
@@ -35,6 +39,33 @@ private fun CodeStudioApp() {
     var darkTheme by remember { mutableStateOf(true) }
     var selectedTab by remember { mutableStateOf(WorkspaceTab.EXPLORER) }
     var showSettings by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val documents = remember { mutableStateListOf<EditorDocument>() }
+    var selectedUri by remember { mutableStateOf<String?>(null) }
+
+    fun openEditorFile(uri: String, name: String, content: String) {
+        val existing = documents.indexOfFirst { it.uri == uri }
+        if (existing >= 0) selectedUri = uri
+        else { documents.add(EditorDocument(uri, name, content)); selectedUri = uri }
+        selectedTab = WorkspaceTab.EDITOR
+    }
+
+    fun saveEditorFile(uri: String) {
+        val index = documents.indexOfFirst { it.uri == uri }
+        if (index < 0) return
+        val doc = documents[index]
+        runCatching {
+            val parsed = Uri.parse(doc.uri)
+            if (parsed.scheme == "file") File(parsed.path!!).writeText(doc.content)
+            else context.contentResolver.openOutputStream(parsed, "wt")?.bufferedWriter()?.use { it.write(doc.content) }
+                ?: error("Não foi possível salvar o arquivo")
+        }.onSuccess {
+            documents[index] = doc.copy(dirty = false)
+            Toast.makeText(context, "Arquivo salvo", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(context, it.message ?: "Falha ao salvar", Toast.LENGTH_LONG).show()
+        }
+    }
 
     val colors = if (darkTheme) darkColorScheme() else lightColorScheme()
 
@@ -70,7 +101,8 @@ private fun CodeStudioApp() {
                     listOf(
                         WorkspaceTab.EXPLORER,
                         WorkspaceTab.SOURCE,
-                        WorkspaceTab.TERMINAL
+                        WorkspaceTab.TERMINAL,
+                        WorkspaceTab.EDITOR
                     ).forEach { tab ->
                         NavigationBarItem(
                             selected = selectedTab == tab,
@@ -100,7 +132,15 @@ private fun CodeStudioApp() {
                     }
                 }
                 VerticalDivider()
-                WorkspaceContent(selectedTab, Modifier.weight(1f))
+                WorkspaceContent(
+                    selectedTab, Modifier.weight(1f),
+                    documents, selectedUri,
+                    onOpenFile = ::openEditorFile,
+                    onSelectFile = { selectedUri = it },
+                    onCloseFile = { uri -> documents.removeAll { it.uri == uri }; if (selectedUri == uri) selectedUri = documents.lastOrNull()?.uri },
+                    onChangeFile = { uri, value -> val i = documents.indexOfFirst { it.uri == uri }; if (i >= 0) documents[i] = documents[i].copy(content = value, dirty = true) },
+                    onSaveFile = ::saveEditorFile
+                )
             }
         }
 
@@ -130,7 +170,13 @@ private fun CodeStudioApp() {
 }
 
 @Composable
-private fun WorkspaceContent(tab: WorkspaceTab, modifier: Modifier = Modifier) {
+private fun WorkspaceContent(
+    tab: WorkspaceTab, modifier: Modifier = Modifier,
+    documents: List<EditorDocument>, selectedUri: String?,
+    onOpenFile: (String, String, String) -> Unit,
+    onSelectFile: (String) -> Unit, onCloseFile: (String) -> Unit,
+    onChangeFile: (String, String) -> Unit, onSaveFile: (String) -> Unit
+) {
     Column(modifier.fillMaxSize().padding(20.dp)) {
         Text(
             tab.label,
@@ -140,7 +186,7 @@ private fun WorkspaceContent(tab: WorkspaceTab, modifier: Modifier = Modifier) {
         Spacer(Modifier.height(8.dp))
 
         when (tab) {
-            WorkspaceTab.EXPLORER -> FileExplorerScreen()
+            WorkspaceTab.EXPLORER -> FileExplorerScreen(onOpenFile)\n            WorkspaceTab.EDITOR -> CodeEditorScreen(documents, selectedUri, onSelectFile, onCloseFile, onChangeFile, onSaveFile)
             WorkspaceTab.SEARCH -> EmptyState(
                 Icons.Default.Search,
                 "Busca do projeto",
