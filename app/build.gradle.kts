@@ -7,12 +7,27 @@ android {
     namespace = "com.codestudio.android"
     compileSdk = 36
 
+    signingConfigs {
+        create("stableDebug") {
+            storeFile = file("codestudio-debug.keystore")
+            storePassword = "CodeStudioDebug2026"
+            keyAlias = "codestudio"
+            keyPassword = "CodeStudioDebug2026"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.codestudio.android"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 2
+        versionName = "0.2.0"
+    }
+
+    buildTypes {
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("stableDebug")
+        }
     }
 
     buildFeatures {
