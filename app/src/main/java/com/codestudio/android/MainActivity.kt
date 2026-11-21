@@ -121,7 +121,8 @@ private fun CodeStudioApp() {
                         WorkspaceTab.SEARCH,
                         WorkspaceTab.SOURCE,
                         WorkspaceTab.GITHUB,
-                        WorkspaceTab.TERMINAL
+                        WorkspaceTab.TERMINAL,
+                        WorkspaceTab.EDITOR
                     ).forEach { tab ->
                         NavigationRailItem(
                             selected = selectedTab == tab,
@@ -186,7 +187,8 @@ private fun WorkspaceContent(
         Spacer(Modifier.height(8.dp))
 
         when (tab) {
-            WorkspaceTab.EXPLORER -> FileExplorerScreen(onOpenFile)\n            WorkspaceTab.EDITOR -> CodeEditorScreen(documents, selectedUri, onSelectFile, onCloseFile, onChangeFile, onSaveFile)
+            WorkspaceTab.EXPLORER -> FileExplorerScreen(onOpenFile)
+            WorkspaceTab.EDITOR -> CodeEditorScreen(documents, selectedUri, onSelectFile, onCloseFile, onChangeFile, onSaveFile)
             WorkspaceTab.SEARCH -> EmptyState(
                 Icons.Default.Search,
                 "Busca do projeto",
