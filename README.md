@@ -15,3 +15,10 @@ IDE móvel para Android, inspirada no VS Code.
 Esta base contém o aplicativo Android inicial, navegação visual de módulos e workflow de CI para gerar APK debug.
 
 Ainda não implementa editor, Git, terminal ou conexão GitHub dentro do app. Esses módulos serão adicionados em etapas próprias.
+
+
+## APK de desenvolvimento
+- Nome instalado: CodeStudio - Editor de Código
+- Arquivo gerado: CodeStudio-Editor-de-Codigo.apk
+- As compilações debug reutilizam uma chave de assinatura persistida no cache do GitHub Actions para permitir instalar atualizações por cima da versão anterior.
+- O número da versão de compilação é incrementado automaticamente pelo GitHub Actions.
