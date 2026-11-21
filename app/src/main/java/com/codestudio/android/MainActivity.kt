@@ -140,23 +140,7 @@ private fun WorkspaceContent(tab: WorkspaceTab, modifier: Modifier = Modifier) {
         Spacer(Modifier.height(8.dp))
 
         when (tab) {
-            WorkspaceTab.EXPLORER -> {
-                Text(
-                    "Seus projetos aparecerão aqui.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.height(20.dp))
-                Button(onClick = { }) {
-                    Icon(Icons.Default.CreateNewFolder, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Abrir projeto — próxima etapa")
-                }
-                EmptyState(
-                    Icons.Default.FolderOpen,
-                    "Nenhum projeto aberto",
-                    "A seleção de pastas e o explorador de arquivos serão implementados na etapa 2."
-                )
-            }
+            WorkspaceTab.EXPLORER -> FileExplorerScreen()
             WorkspaceTab.SEARCH -> EmptyState(
                 Icons.Default.Search,
                 "Busca do projeto",
