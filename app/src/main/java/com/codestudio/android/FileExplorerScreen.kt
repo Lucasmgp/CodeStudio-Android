@@ -23,7 +23,7 @@ import java.io.File
 import java.io.IOException
 
 @Composable
-fun FileExplorerScreen() {
+fun FileExplorerScreen(onOpenFile: (String, String, String) -> Unit) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("codestudio_workspace", Context.MODE_PRIVATE) }
     var treeUri by remember { mutableStateOf(prefs.getString("tree_uri", null)) }
@@ -133,7 +133,7 @@ fun FileExplorerScreen() {
                     var expanded by remember(item.uri) { mutableStateOf(false) }
                     Row(Modifier.fillMaxWidth().clickable {
                         if (item.isDirectory) stack = stack + item
-                        else runCatching { read(item) }.onSuccess { editorText = it; editing = item }
+                        else runCatching { read(item) }.onSuccess { content -> onOpenFile(item.uri.toString(), item.name ?: "arquivo", content) }
                             .onFailure { error = it.message ?: "Falha ao abrir arquivo" }
                     }.padding(vertical = 10.dp, horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(if (item.isDirectory) Icons.Default.Folder else Icons.Default.Description, null,
