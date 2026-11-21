@@ -21,7 +21,6 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.BasicTextField
@@ -52,6 +51,7 @@ fun CodeEditorScreen(
         }
         return
     }
+    var editorValue by remember(current.uri) { mutableStateOf(TextFieldValue(current.content)) }
     Column(Modifier.fillMaxSize()) {
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
@@ -104,8 +104,8 @@ fun CodeEditorScreen(
                 }
             }
             BasicTextField(
-                value = TextFieldValue(current.content, selection = TextRange(current.content.length)),
-                onValueChange = { onChange(current.uri, it.text) },
+                value = editorValue,
+                onValueChange = { editorValue = it; onChange(current.uri, it.text) },
                 modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(scroll)
                     .padding(start = 4.dp, end = 8.dp, top = 8.dp, bottom = 24.dp),
                 textStyle = TextStyle(
