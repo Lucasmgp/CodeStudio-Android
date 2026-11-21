@@ -3,6 +3,7 @@ package com.codestudio.android
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.webkit.MimeTypeMap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -181,7 +182,14 @@ fun FileExplorerScreen(onOpenFile: (String, String, String) -> Unit) {
                         val clean = name.trim()
                         require(clean.isNotBlank() && clean != "." && clean != ".." && !clean.contains("/")) { "Informe um nome válido." }
                         when (dialog) {
-                            "file" -> check(current.createFile("text/plain", clean) != null) { "Não foi possível criar o arquivo." }
+                            "file" -> {
+                                val extension = clean.substringAfterLast('.', "").lowercase()
+                                val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
+                                    ?: "application/octet-stream"
+                                check(current.createFile(mimeType, clean) != null) {
+                                    "Não foi possível criar o arquivo."
+                                }
+                            }
                             "folder" -> check(current.createDirectory(clean) != null) { "Não foi possível criar a pasta." }
                             "rename" -> check(selected?.renameTo(clean) == true) { "Não foi possível renomear." }
                             "copy" -> copy(selected ?: error("Arquivo não selecionado"), current, clean)
