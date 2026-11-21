@@ -186,8 +186,19 @@ fun FileExplorerScreen(onOpenFile: (String, String, String) -> Unit) {
                                 val extension = clean.substringAfterLast('.', "").lowercase()
                                 val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
                                     ?: "application/octet-stream"
-                                check(current.createFile(mimeType, clean) != null) {
-                                    "Não foi possível criar o arquivo."
+                                val created = current.createFile(mimeType, clean)
+                                    ?: throw IOException("Não foi possível criar o arquivo.")
+
+                                // Alguns provedores SAF acrescentam a extensão MIME mesmo quando
+                                // o nome já a contém. Corrige o nome retornado pelo provedor.
+                                if (created.name != clean && !created.renameTo(clean)) {
+                                    created.delete()
+                                    val fallback = current.createFile("application/octet-stream", clean)
+                                        ?: throw IOException("Não foi possível criar o arquivo.")
+                                    check(fallback.name == clean) {
+                                        fallback.delete()
+                                        "O armazenamento não preservou o nome informado."
+                                    }
                                 }
                             }
                             "folder" -> check(current.createDirectory(clean) != null) { "Não foi possível criar a pasta." }
